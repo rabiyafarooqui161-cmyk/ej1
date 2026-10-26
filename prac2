@@ -1,0 +1,253 @@
+PRACTICAL 2 (A, B, C) — ENTERPRISE JAVA
+
+==================================================
+PRACTICAL 2(A)
+==================================================
+
+AIM: Using Request Dispatcher Interface create a Servlet which will validate the password entered by the user. If the user has entered "Servlet" as password, then he will be forwarded to Welcome Servlet else the user will stay on the index.html page and an error message will be displayed.
+
+1. index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Form</title>
+</head>
+<body>
+    <h2>Login Form</h2>
+    <form action="DispatchServlet" method="GET">
+        Enter Password:
+        <input type="password" id="pass" name="password" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
+
+
+2. DispatchServlet.java
+
+package Dispatch;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "DispatchServlet", urlPatterns = {"/DispatchServlet"})
+public class DispatchServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        String userPassword = request.getParameter("password");
+
+        out.println("<html><body bgcolor=red>");
+
+        if (userPassword.equals("Servlet")) {
+            RequestDispatcher dispatcher =
+                    request.getRequestDispatcher("/welcome");
+            dispatcher.forward(request, response);
+        } else {
+            out.println("<h1>Login fail<h1>");
+
+            RequestDispatcher dispatcher =
+                    request.getRequestDispatcher("index.html");
+            dispatcher.include(request, response);
+        }
+
+        out.println("</body>");
+        out.println("</html>");
+    }
+}
+
+
+3. welcome.java
+
+package Dispatch;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "welcome", urlPatterns = {"/welcome"})
+public class welcome extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+        out.println("<h1>Welcome! Login Successful.</h1>");
+    }
+}
+
+
+OUTPUT:
+Correct Password: Servlet
+Wrong Password: Login fail
+
+
+==================================================
+PRACTICAL 2(B)
+==================================================
+
+AIM: Create a servlet that uses Cookies to store the number of times a user has visited servlet.
+
+1. index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visit Counter</title>
+</head>
+<body>
+    <h2>Cookie Visit Counter Demo</h2>
+    <a href="CookieServlet">Click here to visit the Servlet</a>
+</body>
+</html>
+
+
+2. CookieServlet.java
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Cookie;
+
+@WebServlet(urlPatterns = {"/CookieServlet"})
+public class CookieServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+        int count = 0;
+
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if (c.getName().equals("visitCount")) {
+                    count = Integer.parseInt(c.getValue());
+                    break;
+                }
+            }
+        }
+
+        count++;
+
+        Cookie visitCookie = new Cookie("visitCount", String.valueOf(count));
+        visitCookie.setMaxAge(24 * 60 * 60);
+        response.addCookie(visitCookie);
+
+        if (count == 1) {
+            out.println("<h1>Welcome! This is your first visit.</h1>");
+        } else {
+            out.println("<h1>Welcome back! You have Visited this page "
+                    + count + " times.</h1>");
+        }
+    }
+}
+
+
+OUTPUT:
+First visit: Welcome! This is your first visit.
+Next visits: Welcome back! You have visited this page multiple times.
+
+
+==================================================
+PRACTICAL 2(C)
+==================================================
+
+AIM: Create a servlet demonstrating the use of session creation and destruction. Also check whether the user has visited this page first time or has visited earlier also using sessions.
+
+1. index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Management</title>
+</head>
+<body>
+    <h2>HttpSession Creation & Destruction</h2>
+    <a href="SessionServlet">Click here to start/view Session</a>
+</body>
+</html>
+
+
+2. SessionServlet.java
+
+package Session;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@WebServlet(name = "SessionServlet", urlPatterns = {"/SessionServlet"})
+public class SessionServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        out.println("<html><body style='background-color: lightblue;'>");
+
+        String action = request.getParameter("action");
+
+        if ("logout".equals(action)) {
+            HttpSession session = request.getSession(false);
+
+            if (session != null) {
+                session.invalidate();
+            }
+
+            out.println("<h2>Session Destroyed!You have been logged out.</h2>");
+            out.println("<a href='index.html'>Start New Session</a>");
+            return;
+        }
+
+        HttpSession session = request.getSession(true);
+
+        if (session.isNew()) {
+            session.setAttribute("visited", true);
+            out.println("<h2>Welcome! You are visiting this page for the FIRST time.</h2>");
+        } else {
+            out.println("<h2>Welcome Back! You have visited this page Earlier.</h2>");
+        }
+
+        out.println("<p><b>Session ID:</b>" + session.getId() + "</p>");
+        out.println("<a href='SessionServlet'>Refresh Page</a> | ");
+        out.println("<a href='SessionServlet?action=logout'>Logout(Destroy Session)</a>");
+
+        out.println("</body></html>");
+    }
+}
+
+
+OUTPUT:
+First visit: Welcome! You are visiting this page for the FIRST time.
+Earlier visit: Welcome Back! You have visited this page Earlier.
+Logout: Session Destroyed! You have been logged out.
