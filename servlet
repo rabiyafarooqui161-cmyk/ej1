@@ -1,0 +1,376 @@
+==============================
+PRACTICAL 3A
+==============================
+
+AIM: Create a Servlet application to upload and download a file.
+
+FILE 1: index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Utility</title>
+</head>
+<body>
+
+    <h3>Upload a File</h3>
+    <form action="upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <button type="submit">Upload</button>
+    </form>
+
+    <hr>
+
+    <h3>Download a File</h3>
+    <form action="download" method="get">
+        <input type="text" name="name" placeholder="Type filename here" />
+        <button type="submit">Download</button>
+    </form>
+
+</body>
+</html>
+
+
+FILE 2: upload.java
+
+package IOpack;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+
+@WebServlet(name = "upload", urlPatterns = {"/upload"})
+@MultipartConfig
+public class upload extends HttpServlet {
+
+    @Override
+    @SuppressWarnings("empty-statement")
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        new File("C:/uploads/").mkdirs();
+
+        Part filePart = request.getPart("file");
+        String fileName = filePart.getSubmittedFileName();
+
+        try (InputStream inst = filePart.getInputStream();
+             OutputStream outst =
+                 new FileOutputStream("C:/uploads/" + fileName)) {
+
+            byte[] b = new byte[1024];
+            int len;
+
+            while ((len = inst.read(b)) != -1) {
+                outst.write(b, 0, len);
+            }
+        }
+
+        PrintWriter out = response.getWriter();
+        out.println("<h1>" + fileName +
+            " uploaded successfully into C:/uploads/ </h1>");
+    }
+}
+
+
+FILE 3: download.java
+
+package IOpack;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "download", urlPatterns = {"/download"})
+public class download extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String name = request.getParameter("name");
+
+        response.setHeader("Content-Disposition",
+            "attachment; filename=\"" + name + "\"");
+
+        try (InputStream inst =
+                 new FileInputStream("C:/uploads/" + name);
+             OutputStream outst = response.getOutputStream()) {
+
+            byte[] b = new byte[4096];
+            int len;
+
+            while ((len = inst.read(b)) != -1) {
+                outst.write(b, 0, len);
+            }
+        }
+
+        PrintWriter out = response.getWriter();
+        out.println("<h1>" + name +
+            " downloaded successfully </h1>");
+    }
+}
+
+
+==============================
+PRACTICAL 3B
+==============================
+
+AIM: Develop Simple Servlet Question Answer Application using Database.
+
+SQL QUERY:
+
+USE j2ee;
+
+CREATE TABLE quiz (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question VARCHAR(255) NOT NULL,
+    answer VARCHAR(255) NOT NULL
+);
+
+INSERT INTO quiz (question, answer)
+VALUES
+('What is the capital of India?', 'New Delhi'),
+('Java is developed by Oracle. (True/False)', 'True');
+
+
+FILE 1: index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz System</title>
+</head>
+<body>
+
+    <h2>Start the Quiz Application</h2>
+    <a href="QuizServlet">
+        <button>Load Question</button>
+    </a>
+
+</body>
+</html>
+
+
+FILE 2: QuizServlet.java
+
+package QuizPack;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "QuizServlet",
+            urlPatterns = {"/QuizServlet"})
+public class QuizServlet extends HttpServlet {
+
+    private Connection getConnection() throws Exception {
+        Class.forName("com.mysql.jdbc.Driver");
+
+        String url =
+            "jdbc:mysql://localhost:3306/j2ee?useSSL=false";
+
+        return DriverManager.getConnection(
+            url, "root", "admin");
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT * FROM quiz ORDER BY RAND() LIMIT 1")) {
+
+            if (rs.next()) {
+                String id = rs.getString("id");
+                String qText = rs.getString("question");
+
+                out.print("<div>");
+                out.print("<h2>Quiz Application</h2>");
+                out.print("<p><strong>Question:</strong> "
+                    + qText + "</p>");
+
+                out.print("<form action='QuizServlet' method='post'>");
+
+                out.print("<input type='hidden' name='qId' value='"
+                    + id + "'>");
+
+                out.print("<input type='text' name='userAns' "
+                    + "placeholder='Your answer' required><br><br>");
+
+                out.print("<button type='submit'>Submit Answer</button>");
+                out.print("</form>");
+                out.print("</div>");
+            }
+
+        } catch (Exception e) {
+            out.print("Database Error: " + e);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        String qId = request.getParameter("qId");
+        String userAns = request.getParameter("userAns").trim();
+
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT answer FROM quiz WHERE id =" + qId)) {
+
+            out.print("<div>");
+
+            if (rs.next()) {
+                String correctAns = rs.getString("answer");
+
+                if (correctAns.equals(userAns)) {
+                    out.print("<h2 style='color:green;'>"
+                        + "Correct Answer</h2>");
+                } else {
+                    out.print("<h2 style='color:red;'>"
+                        + "Wrong Answer</h2>");
+
+                    out.print("<p>The correct answer was: <strong>"
+                        + correctAns + "</strong></p>");
+                }
+            }
+
+            out.print("<br><a href='QuizServlet'>"
+                + "<button>Next Question</button></a>");
+
+            out.print("</div>");
+
+        } catch (Exception e) {
+            out.print("Processing Error: " + e);
+        }
+    }
+}
+
+
+==============================
+PRACTICAL 3C
+==============================
+
+AIM: Create simple Servlet application to demonstrate Non-Blocking Read Operation.
+
+FILE 1: index.html
+
+<!DOCTYPE html>
+<html>
+<body>
+
+    <h2>Non-Blocking Read</h2>
+
+    <form action="ReadServlet" method="post">
+        Enter Message:
+        <input type="text" name="message">
+        <input type="submit" value="Send">
+    </form>
+
+</body>
+</html>
+
+
+FILE 2: ReadServlet.java
+
+package NBReadpackage;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.AsyncContext;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "ReadServlet",
+    urlPatterns = {"/ReadServlet"}, asyncSupported = true)
+public class ReadServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        System.out.println("doPost() started");
+
+        AsyncContext asyncContext = request.startAsync();
+        ServletInputStream input = request.getInputStream();
+
+        input.setReadListener(new ReadListener() {
+
+            @Override
+            public void onDataAvailable() throws IOException {
+
+                System.out.println("Data is available...");
+
+                byte[] data = new byte[100];
+
+                while (input.isReady()) {
+                    int n = input.read(data);
+
+                    if (n > 0) {
+                        String message =
+                            new String(data, 0, n);
+
+                        System.out.println("Received: " + message);
+                    }
+                }
+            }
+
+            @Override
+            public void onAllDataRead() throws IOException {
+
+                System.out.println("Reading completed.");
+                asyncContext.complete();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+                System.out.println("Error: " + t);
+                asyncContext.complete();
+            }
+        });
+    }
+}
