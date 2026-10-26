@@ -1,0 +1,310 @@
+==================== PRACTICAL 7A ====================
+
+AIM: Create a Currency Converter application using EJB.
+
+
+---------- index.html ----------
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Currency Converter</title>
+</head>
+<body>
+    <form action="CCServlet">
+        Enter Amount <input type="text" name="amt"><br>
+
+        Select Conversion Type
+        <input type="radio" name="type" value="r2d" checked>
+        Rupees to Dollar
+
+        <input type="radio" name="type" value="d2r">
+        Dollar to Rupees<br>
+
+        <input type="reset">
+        <input type="submit" value="CONVERT">
+    </form>
+</body>
+</html>
+
+
+---------- CCBean.java ----------
+
+package mybeans;
+
+import javax.ejb.Stateless;
+
+@Stateless
+public class CCBean {
+    public CCBean() {}
+
+    public double r2Dollar(double r) {
+        return r / 65.65;
+    }
+
+    public double d2Rupees(double d) {
+        return d * 65.65;
+    }
+}
+
+
+---------- CCServlet.java ----------
+
+package mypack;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import mybeans.CCBean;
+
+@WebServlet(name = "CCServlet", urlPatterns = {"/CCServlet"})
+public class CCServlet extends HttpServlet {
+
+    @EJB
+    CCBean obj;
+
+    public void doGet(HttpServletRequest request,
+                      HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+
+        double amt = Double.parseDouble(request.getParameter("amt"));
+
+        if (request.getParameter("type").equals("r2d")) {
+            out.println("<h1>" + amt + " Rupees = "
+                    + obj.r2Dollar(amt) + " Dollars</h1>");
+        }
+
+        if (request.getParameter("type").equals("d2r")) {
+            out.println("<h1>" + amt + " Dollars = "
+                    + obj.d2Rupees(amt) + " Rupees</h1>");
+        }
+    }
+}
+
+
+==================== PRACTICAL 7B ====================
+
+AIM: Develop a Simple Room Reservation System Application Using EJB.
+
+NOTE: Practical 7B ka exact code PDF mein nahi mila.
+
+
+==================== PRACTICAL 7C ====================
+
+AIM: Develop simple shopping cart application using EJB
+[Stateful Session Bean].
+
+
+---------- index.html ----------
+
+<html>
+<head>
+    <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<center>
+    <table border="2">
+        <tr>
+            <th>Book Name</th>
+            <th>Add Book</th>
+            <th>Remove Book</th>
+        </tr>
+
+        <tr>
+            <td>Core Java</td>
+            <td><a href="MyItem?x=1&ti=Core Java">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Core Java">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Java Beginners Guide</td>
+            <td><a href="MyItem?x=1&ti=Java Beginners Guide">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Java Beginners Guide">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Learning Web Design</td>
+            <td><a href="MyItem?x=1&ti=Learning Web Design">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Learning Web Design">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Thinking in java</td>
+            <td><a href="MyItem?x=1&ti=Thinking in java">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Thinking in java">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Clean Code</td>
+            <td><a href="MyItem?x=1&ti=Clean Code">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Clean CodeE">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Java for Dummies</td>
+            <td><a href="MyItem?x=1&ti=Java for Dummies">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Java for Dummies">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Html5 Black book</td>
+            <td><a href="MyItem?x=1&ti=Html5 Black book">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Html5 Black book">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td>Html5 for Dummies</td>
+            <td><a href="MyItem?x=1&ti=Html5 for Dummies">add book</a></td>
+            <td><a href="MyItem?x=2&ti=Html5 for Dummies">remove book</a></td>
+        </tr>
+
+        <tr>
+            <td colspan="3" style="text-align: center;">
+                <a href="MyItem?x=3" target="_blank">Display Book</a>
+            </td>
+        </tr>
+    </table>
+</center>
+</body>
+</html>
+
+
+---------- ShoppingCartLocal.java ----------
+
+package cart;
+
+import java.util.ArrayList;
+import javax.ejb.Local;
+
+@Local
+public interface ShoppingCartLocal {
+    void AddBook(String title);
+    void RemoveBook(String title);
+    ArrayList ListCartItems();
+}
+
+
+---------- ShoppingCart.java ----------
+
+package cart;
+
+import javax.ejb.Stateful;
+import java.util.ArrayList;
+
+@Stateful
+public class ShoppingCart implements ShoppingCartLocal {
+
+    private ArrayList<String> cartt;
+
+    public ShoppingCart() {
+        cartt = new ArrayList();
+    }
+
+    @Override
+    public void AddBook(String title) {
+        cartt.add(title);
+    }
+
+    @Override
+    public void RemoveBook(String title) {
+        try {
+            cartt.remove(title);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }
+
+    @Override
+    public ArrayList ListCartItems() {
+        return cartt;
+    }
+}
+
+
+---------- MyItem.java ----------
+
+package cart;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import javax.ejb.EJB;
+
+@WebServlet(name = "MyItem", urlPatterns = {"/MyItem"})
+public class MyItem extends HttpServlet {
+
+    @EJB
+    private ShoppingCartLocal ShoppingCart;
+
+    protected void processRequest(HttpServletRequest request,
+                                  HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
+
+        try (PrintWriter out = response.getWriter()) {
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet MyItem</title>");
+            out.println("</head>");
+            out.println("<body>");
+
+            int x = Integer.parseInt(request.getParameter("x"));
+            String title = request.getParameter("ti");
+
+            if (x == 1) {
+                ShoppingCart.AddBook(title);
+                response.sendRedirect("index,html");
+            } else if (x == 2) {
+                ShoppingCart.RemoveBook(title);
+                response.sendRedirect("index.html");
+            } else {
+                ArrayList<String> allitems =
+                        ShoppingCart.ListCartItems();
+
+                for (int i = 0; i < allitems.size(); i++) {
+                    out.println(allitems.get(i) + "<br>");
+                }
+            }
+
+            out.println("</body>");
+            out.println("</html>");
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request,
+                         HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+                          HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }
+}
