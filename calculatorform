@@ -1,0 +1,215 @@
+PRACTICAL 1 (A, B, C) — ENTERPRISE JAVA
+
+PRACTICAL 1(A)
+
+Question: Create a simple calculator application using Servlet.
+
+1. index.html
+
+<html>
+<head>
+    <title>TODO supply a title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <form action="Calculator" method="get">
+        Enter number 1:<input type="text" name="n1"><br>
+        Enter number 2:<input type="text" name="n2"><br>
+        Select List
+        <select name="Arithmetic">
+            <option value="+">+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+        </select>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+
+2. Calculator.java
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class Calculator extends HttpServlet {
+    public void service(ServletRequest req, ServletResponse res)
+            throws IOException, ServletException {
+        PrintWriter out = res.getWriter();
+
+        int a = Integer.parseInt(req.getParameter("n1"));
+        int b = Integer.parseInt(req.getParameter("n2"));
+
+        String s = req.getParameter("Arithmetic");
+
+        if (s.equals("+")) {
+            out.print("Addition is " + (a + b));
+        }
+        else if (s.equals("-")) {
+            out.print("Subtraction is " + (a - b));
+        }
+        else if (s.equals("*")) {
+            out.print("Multiplication is " + (a * b));
+        }
+        else {
+            out.print("Division is " + (a / b));
+        }
+    }
+}
+
+---
+
+PRACTICAL 1(B)
+
+Question: Create a Servlet for a login page. If the username and password are correct, it displays “Hello username”; otherwise, it displays “login failed”.
+
+1. index.html
+
+<html>
+<head>
+    <title>TODO Supply a title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <form action="loginDemo">
+        Enter username:
+        <input type="text" name="n1">
+        <br>
+
+        Enter password:
+        <input type="password" name="n2">
+        <br>
+
+        <input type="submit" value="Login">
+        <br>
+    </form>
+</body>
+</html>
+
+2. loginDemo.java
+
+public class loginDemo extends HttpServlet {
+
+    public void service(ServletRequest req, ServletResponse res)
+            throws ServletException, IOException {
+
+        PrintWriter out = res.getWriter();
+
+        String n1 = req.getParameter("n1");
+        String n2 = req.getParameter("n2");
+
+        if (n1.equals("ABC") && n2.equals("123")) {
+            out.print("Login Successful");
+        }
+        else {
+            out.println("Invalid password, Try again!!!");
+        }
+    }
+}
+
+---
+
+PRACTICAL 1(C)
+
+Question: Create a registration Servlet in Java using JDBC. Accept details such as Username, Password, Email, and Country from the user using an HTML form and store the registration details in the database.
+
+1. SQL Query
+
+CREATE DATABASE j2ee;
+USE j2ee;
+
+CREATE TABLE user (
+    username VARCHAR(20),
+    password VARCHAR(20),
+    email VARCHAR(20)
+);
+
+INSERT INTO user (username, password, email)
+VALUES ('Yourname', 'Yourpasswrod', 'Youremail');
+
+2. index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <form method="GET" action="RegisterServlet">
+        <h1>Welcome to Registration page</h1>
+
+        Enter User Name
+        <input type="text" name="txtUid"><br>
+
+        Enter Password
+        <input type="password" name="txtPass"><br>
+
+        Enter Email
+        <input type="text" name="txtEmail"><br>
+
+        <input type="reset">
+        <input type="submit" value="REGISTER">
+    </form>
+</body>
+</html>
+
+3. RegisterServlet.java
+
+package Register;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(name = "RegisterServlet", urlPatterns = {"/RegisterServlet"})
+public class RegisterServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        PrintWriter out = response.getWriter();
+
+        String id = request.getParameter("txtUid");
+        String ps = request.getParameter("txtPass");
+        String em = request.getParameter("txtEmail");
+
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+
+            String url = "jdbc:mysql://localhost:3306/j2ee?useSSL=false";
+
+            Connection con = DriverManager.getConnection(url, "root", "root");
+
+            Statement st = con.createStatement();
+
+            String sql = "INSERT INTO user VALUES ('" + id + "', '" + ps + "', '" + em + "')";
+
+            int row = st.executeUpdate(sql);
+
+            out.println("<h1>" + row + " Inserted Succesfully!");
+
+        } catch (Exception e) {
+            out.println(e);
+        }
+    }
+}
+
