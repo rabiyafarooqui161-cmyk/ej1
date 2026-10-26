@@ -1,0 +1,254 @@
+====================================
+PRACTICAL 4A
+====================================
+
+AIM: Develop a simple JSP application to display values obtained from the use of intrinsic objects of various types.
+
+FILE: index.jsp
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<body>
+
+    <h1>Simple JSP Intrinsic Objects Demo</h1>
+
+    <h3>1. The 'request' Object</h3>
+    <p>Your IP Address is: <%= request.getRemoteAddr() %></p>
+    <p>You used the method: <%= request.getMethod() %></p>
+
+    <h3>2. The 'session' Object</h3>
+    <p>Your unique Session ID is: <%= session.getId() %></p>
+
+    <h3>3. The 'application' Object</h3>
+    <p>The server software running this code is:
+        <%= application.getServerInfo() %>
+    </p>
+
+    <h3>4. The 'out' Object</h3>
+    <p>
+        <% out.print("<b>Hello! This bold text was printed using out.print().</b>"); %>
+    </p>
+
+</body>
+</html>
+
+
+====================================
+PRACTICAL 4B
+====================================
+
+AIM: Develop a simple JSP application to pass values from one page to another with validations. (Name-txt, age-txt, hobbies-checkbox, email-txt, gender-radio button).
+
+FILE 1: index.jsp
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Registration Form</title>
+</head>
+<body>
+
+    <form action="process.jsp">
+        Name: <input type="text" name="name"><br><br>
+
+        Age: <input type="text" name="age"><br><br>
+
+        Email: <input type="text" name="email"><br><br>
+
+        Gender:
+        <input type="radio" name="gender" value="Male"> Male
+        <input type="radio" name="gender" value="Female"> Female
+        <br><br>
+
+        Hobbies:
+        <input type="checkbox" name="hobbies" value="Coding"> Coding
+        <input type="checkbox" name="hobbies" value="Reading"> Reading
+        <br><br>
+
+        <input type="submit">
+    </form>
+
+</body>
+</html>
+
+
+FILE 2: process.jsp
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<body>
+
+    <%
+        // Get the values from the form
+        String name = request.getParameter("name");
+        String age = request.getParameter("age");
+        String email = request.getParameter("email");
+        String gender = request.getParameter("gender");
+        String[] hobbies = request.getParameterValues("hobbies");
+
+        // Validation Check
+        if (name.isEmpty() || age.isEmpty() ||
+            email.isEmpty() || gender == null || hobbies == null) {
+
+            out.print("<h3 style='color:red;'>Error: Please fill all fields!</h3>");
+
+        } else {
+
+            // Display data if everything is filled
+            out.print("<h3>Submitted Data:</h3>");
+            out.print("Name: " + name + "<br>");
+            out.print("Age: " + age + "<br>");
+            out.print("Email: " + email + "<br>");
+            out.print("Gender: " + gender + "<br>");
+            out.print("Hobbies: " + String.join(",", hobbies));
+        }
+    %>
+
+    <br><br>
+    <a href="index.jsp">Back to Form</a>
+
+</body>
+</html>
+
+
+====================================
+PRACTICAL 4C
+====================================
+
+AIM: Create a registration and login JSP application to register and authenticate the user based on username and password using JDBC.
+
+DATABASE QUERY:
+
+CREATE DATABASE j2ee;
+USE j2ee;
+
+CREATE TABLE users (
+    username VARCHAR(50),
+    password VARCHAR(50)
+);
+
+
+FILE 1: index.jsp
+
+<%@ page import="java.sql.*" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+
+    <h2>User Registration</h2>
+
+    <form method="post">
+        Username:
+        <input type="text" name="username" required><br><br>
+
+        Password:
+        <input type="password" name="password" required><br><br>
+
+        <input type="submit" value="Register">
+    </form>
+
+    <%
+        String u = request.getParameter("username");
+        String p = request.getParameter("password");
+
+        if (u != null && p != null) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+
+                String url =
+                    "jdbc:mysql://localhost:3306/j2ee?useSSL=false";
+
+                Connection con =
+                    DriverManager.getConnection(
+                        url, "root", "admin@123");
+
+                Statement stmt = con.createStatement();
+
+                String query =
+                    "INSERT INTO users VALUES('" + u + "', '" + p + "')";
+
+                int row = stmt.executeUpdate(query);
+
+                if (row > 0) {
+                    out.println("<p>Registration Successful!</p>");
+                }
+
+            } catch (Exception e) {
+                out.println(e);
+            }
+        }
+    %>
+
+    <a href="login.jsp">Login here</a>
+
+</body>
+</html>
+
+
+FILE 2: login.jsp
+
+<%@ page import="java.sql.*" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+    <h2>User Login</h2>
+
+    <form method="post">
+        Username:
+        <input type="text" name="username" required><br><br>
+
+        Password:
+        <input type="password" name="password" required><br><br>
+
+        <input type="submit" value="Login">
+    </form>
+
+    <%
+        String u = request.getParameter("username");
+        String p = request.getParameter("password");
+
+        if (u != null && p != null) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+
+                String url =
+                    "jdbc:mysql://localhost:3306/j2ee?useSSL=false";
+
+                Connection con =
+                    DriverManager.getConnection(
+                        url, "root", "admin@123");
+
+                Statement stmt = con.createStatement();
+
+                String query =
+                    "SELECT * FROM users WHERE username='" + u +
+                    "' AND password='" + p + "'";
+
+                ResultSet rs = stmt.executeQuery(query);
+
+                if (rs.next()) {
+                    session.setAttribute("user", u);
+                    out.println("<p>Login Success!</p>");
+                } else {
+                    out.println("<p>Invalid Username or Password!</p>");
+                }
+
+            } catch (Exception e) {
+                out.println(e);
+            }
+        }
+    %>
+
+    <a href="index.jsp">Register here</a>
+
+</body>
+</html>
