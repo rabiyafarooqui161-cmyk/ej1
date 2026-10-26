@@ -1,0 +1,158 @@
+==================== PRACTICAL 6A ====================
+
+AIM: Create an HTML page with fields eno, name, age, designation, salary. On submit, data will be sent to a JSP page which updates the employee table using the matching employee number.
+
+
+/* SQL QUERY */
+
+CREATE TABLE emp (
+    empid VARCHAR(10) PRIMARY KEY,
+    ename VARCHAR(50),
+    salary VARCHAR(50),
+    age VARCHAR(50)
+);
+
+INSERT INTO emp VALUES('1','aaa','221234','11');
+INSERT INTO emp VALUES('2','bbb','334567','22');
+INSERT INTO emp VALUES('3','ccc','44454','33');
+INSERT INTO emp VALUES('4','ddd','55123','44');
+
+
+/* index.html */
+
+<html>
+<head>
+    <title>JSP page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <form action="UpdateEmp.jsp">
+        Enter Employee Number<input type="text" name="txtEno"><br>
+        Enter Name<input type="text" name="txtName"><br>
+        Enter age<input type="text" name="txtAge"><br>
+        Enter Salary<input type="text" name="txtSal"><br>
+        <input type="reset"><input type="submit">
+    </form>
+</body>
+</html>
+
+
+/* UpdateEmp.jsp */
+
+<%@page contentType="text/html" import="java.sql.*" %>
+<html>
+<body>
+<h1>Employee Record Update</h1>
+<%
+String eno = request.getParameter("txtEno");
+String name = request.getParameter("txtName");
+String age = request.getParameter("txtAge");
+String sal = request.getParameter("txtSal");
+
+try {
+    Class.forName("com.mysql.jdbc.Driver");
+
+    Connection con1 = DriverManager.getConnection(
+        "jdbc:mysql://localhost:3306/j2ee?useSSL=false",
+        "root", "admin@123"
+    );
+
+    PreparedStatement stmt =
+        con1.prepareStatement("select * from emp where empid=?");
+    stmt.setString(1, eno);
+    ResultSet rs = stmt.executeQuery();
+
+    if(rs.next()) {
+        out.println("<h1> Employee " + name + " Exist </h1>");
+
+        PreparedStatement pst1 =
+            con1.prepareStatement("update emp set salary=? where empid=?");
+        PreparedStatement pst2 =
+            con1.prepareStatement("update emp set age=? where empid=?");
+
+        pst1.setString(1, sal);
+        pst1.setString(2, eno);
+        pst2.setString(1, age);
+        pst2.setString(2, eno);
+
+        pst1.executeUpdate();
+        pst2.executeUpdate();
+    } else {
+        out.println("<h1>Employee Record not exist !!!!!</h1>");
+    }
+} catch(Exception e) {
+    out.println(e);
+}
+%>
+</body>
+</html>
+
+
+==================== PRACTICAL 6B ====================
+
+AIM: Create a JSP page to demonstrate the use of Expression Language.
+
+
+/* index.jsp */
+
+<%@ page contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"
+    isELIgnored="false" %>
+
+<%
+    // Store sample data for the EL expressions
+    request.setAttribute("studentName", "Rahul");
+    request.setAttribute("course", "BCA");
+    request.setAttribute("marks", 85);
+%>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Expression Language Demo</title>
+</head>
+<body>
+
+    <h1>JSP Expression Language Demo</h1>
+
+    <h2>1. Display Student Details</h2>
+    <p>Name: ${requestScope.studentName}</p>
+    <p>Course: ${requestScope.course}</p>
+    <p>Marks: ${requestScope.marks}</p>
+
+    <h2>2. Arithmetic Operations</h2>
+    <p>Addition: 10 + 5 = ${10 + 5}</p>
+    <p>Subtraction: 10 - 5 = ${10 - 5}</p>
+    <p>Multiplication: 10 * 5 = ${10 * 5}</p>
+    <p>Division: 10 / 5 = ${10 div 5}</p>
+    <p>Remainder: 10 % 3 = ${10 mod 3}</p>
+
+    <h2>3. Comparison Operation</h2>
+    <p>
+        Are marks greater than or equal to 40?
+        ${requestScope.marks >= 40}
+    </p>
+
+    <h2>4. Logical Operation</h2>
+    <p>
+        Are marks between 0 and 100?
+        ${requestScope.marks >= 0 and requestScope.marks <= 100}
+    </p>
+
+    <h2>5. Conditional Operation</h2>
+    <p>Result: ${requestScope.marks >= 40 ? 'Pass' : 'Fail'}</p>
+
+    <h2>6. Empty Check</h2>
+    <p>Is student name empty? ${empty requestScope.studentName}</p>
+
+</body>
+</html>
+
+
+==================== PRACTICAL 6C ====================
+
+AIM: Create a JSP application to demonstrate the use of JSTL.
+
+NOTE: Practical 6C ka exact code PDF mein nahi mila. Uska page/photo bhejne par exact code add kiya ja sakta hai.
