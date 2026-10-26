@@ -1,0 +1,99 @@
+PRACTICAL 8A
+
+AIM: Develop simple EJB application to demonstrate Servlet Hit Count using Singleton Session Beans.
+
+1. HitCounter.java
+
+package hit;
+
+import javax.ejb.Singleton;
+
+@Singleton
+public class HitCounter implements HitCounterLocal {
+
+    private int hitcount = 0;
+
+    @Override
+    public int getHits() {
+        return ++hitcount;
+    }
+}
+
+
+2. TestHitCount.java
+
+package hit;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class TestHitCount extends HttpServlet {
+
+    @EJB
+    private HitCounterLocal hitcounterlocal;
+
+    protected void processRequest(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
+
+        try (PrintWriter out = response.getWriter()) {
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet TestHitCount</title>");
+            out.println("</head>");
+            out.println("<body>");
+            out.println("<h1>HitCount"
+                    + hitcounterlocal.getHits() + "</h1>");
+            out.println("</body>");
+            out.println("</html>");
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }
+}
+
+
+/* HitCounterLocal.java
+   Interface required by the above code.
+   This interface was not visible in the extracted PDF text. */
+
+package hit;
+
+import javax.ejb.Local;
+
+@Local
+public interface HitCounterLocal {
+    int getHits();
+}
+
+
+PRACTICAL 8B
+
+AIM: Develop simple Visitor Statistics application using Message Driven Bean [Stateless Session Bean].
+
+Note: Practical 8B ka complete source code tumhare PDF ke available extracted text mein nahi mila.
